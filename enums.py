@@ -3,6 +3,7 @@ from enum import Enum
 
 class OrderStatus(Enum):
     # OPEN
+    COMPLEX = "złożone"
     ACCEPTED = "przyjete_do_realizacji"
     AWAITING_DELIVERY = "oczekiwanie_na_dostawe"
     IN_PROGRESS = "w_trakcie_kompletowania"
