@@ -11,21 +11,15 @@ from pydantic import BaseModel
 from enums import OrderStatus
 
 
-# --- KLOCKI (modele zagnieżdżone) ---
-# Pydantic wymaga, by zagnieżdżony model był zdefiniowany ZANIM go użyjesz,
-# dlatego najpierw "liście", a OrderJSON (korzeń) na samym końcu.
-
 class Customer(BaseModel):
     name: str
-    email: str          # można podmienić na EmailStr -> walidacja maila gratis (wymaga: pip install "pydantic[email]")
+    email: str
     phone: str
     ip: str
     accepted_terms: bool
 
 
 class Address(BaseModel):
-    # billing_address i shipping_address mają IDENTYCZNY kształt,
-    # więc jeden model obsłuży oba. Nie powielaj kodu.
     name: str
     street: str
     postal_code: str
@@ -34,7 +28,7 @@ class Address(BaseModel):
 
 
 class Payment(BaseModel):
-    status: str         # "oplacone" -> tu w przyszłości może wejść PaymentStatus(Enum)
+    status: str
     method: str
 
 
@@ -45,7 +39,6 @@ class Delivery(BaseModel):
 
 
 class Personalization(BaseModel):
-    # Dane "na miarę" - to one realnie idą do szwalni.
     kolor: str
     rozmiar_bazowy: str
     wzrost_cm: int
@@ -65,6 +58,7 @@ class Product(BaseModel):
     discount_percent: float
     discount_code: str
     price_after_discount: float
+    size: str
     quantity: int
     personalization: Personalization
 
@@ -83,22 +77,20 @@ class Notes(BaseModel):
     admin_public: str
 
 
-# --- KORZEŃ: całe zamówienie ze sklepu ---
-
 class OrderJSON(BaseModel):
-    order_id: str                       # w JSON-ie "1053" jest stringiem, nie liczbą
+    order_id: str
     order_number: str
-    status: OrderStatus                 # string -> Pydantic SAM zamieni na Twój Enum
+    status: OrderStatus
     status_label: str
-    created_at: datetime                # "2026-05-26T22:34:00" -> Pydantic SAM sparsuje na datetime
-    delivery_date_estimated: date       # "2026-06-15" -> parsowane na date
+    created_at: datetime
+    delivery_date_estimated: date
     delivery_days: int
     customer: Customer
     billing_address: Address
     shipping_address: Address
     payment: Payment
     delivery: Delivery
-    products: list[Product]             # lista! produktów może być wiele
+    products: list[Product]
     summary: Summary
     notes: Notes
     delivery_date_label: str
