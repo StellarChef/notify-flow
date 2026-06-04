@@ -1,0 +1,39 @@
+# Postgres dla notify-flow.
+# Uruchom:  docker compose up -d
+# Zatrzymaj: docker compose down   (dane przetrwają w wolumenie pgdata)
+services:
+  db:
+    image: postgres:16 
+    container_name: notify_flow_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5433:5432"                 
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./Database/init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build: .                      
+    container_name: notify_flow_app
+    restart: unless-stopped
+    env_file: .env          
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

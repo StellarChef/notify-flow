@@ -1,9 +1,8 @@
-# Czego NIE kopiować do obrazu (mniejszy obraz + bezpieczeństwo).
 venv/
 .venv/
 __pycache__/
 *.pyc
-.env            # sekrety! do kontenera trafiają przez compose (runtime), nie w obrazie
+.env
 .git/
 .gitignore
 *.md
