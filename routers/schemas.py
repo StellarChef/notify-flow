@@ -9,6 +9,7 @@ from datetime import datetime, date
 from pydantic import BaseModel
 
 from enums import OrderStatus
+import json
 
 
 class Customer(BaseModel):
@@ -94,3 +95,9 @@ class OrderJSON(BaseModel):
     summary: Summary
     notes: Notes
     delivery_date_label: str
+
+    @classmethod
+    def from_file(cls, path: str) -> OrderJSON:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        return cls.model_validate(data)

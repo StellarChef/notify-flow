@@ -5,3 +5,6 @@ venv/
 .venv/
 .vscode/
 .idea/
+test_man.py
+mok_order_1.json
+mok_order.json
