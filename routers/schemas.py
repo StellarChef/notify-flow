@@ -1,12 +1,13 @@
 from pydantic import BaseModel
-
-from enums import OrderStatus, FulfillmentPath
+from datetime import date
+from enums import OrderStatus, FulfillmentPath, DeliveryMethod
 
 
 class Customer(BaseModel):
     name: str
-    surname: str
-    address: str
+    lastname: str
+    email: str
+    phone: str
 
 
 class Product(BaseModel):
@@ -17,9 +18,28 @@ class Product(BaseModel):
     attributes: dict
 
 
+class DeliveryProvider(BaseModel):
+    id: int
+    name: str
+
+
+class Delivery(BaseModel):
+    method: DeliveryMethod
+    address: str | None = None
+    point: str | None = None
+    provider: DeliveryProvider
+
+
+class FulfillmentDate(BaseModel):
+    ordered_at: date
+    ship_by: date
+
+
 class Order(BaseModel):
     id: str
     customer: Customer
     products: list[Product]
     status: OrderStatus
     fulfillment_path: FulfillmentPath
+    fulfillment_date: FulfillmentDate
+    delivery_method: Delivery

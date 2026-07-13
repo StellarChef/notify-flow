@@ -29,3 +29,8 @@ CLOSED = {
 class FulfillmentPath(Enum):
     PRODUCTION = "production"
     WAREHOUSE = "warehouse"
+
+
+class DeliveryMethod(Enum):
+    PICKUP_POINT = "pickup_point"
+    HOME_DELIVERY = "home_delivery"

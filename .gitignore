@@ -8,3 +8,12 @@ venv/
 test_man.py
 mok_order_1.json
 mok_order.json
+mok_order_normalsize.json
+order_1052.json
+order_1057.json
+shipping.json
+statuses.json
+
+# shop-specific lookup tables - not for the public repo
+config/
+fetch_things.py
