@@ -1,6 +1,6 @@
-from datetime import date
+from datetime import date, datetime
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, func
 from sqlalchemy.orm import (
     Mapped,
     declarative_base,
@@ -33,6 +33,8 @@ class ProductTable(Base):
     quantity: Mapped[int]
     price: Mapped[float]
     attributes: Mapped[dict] = mapped_column(JSONB)
+    # every product line belongs to one order
+    order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"))
 
 
 class DeliveryProviderTable(Base):
@@ -41,30 +43,25 @@ class DeliveryProviderTable(Base):
     provider: Mapped[str]
 
 
-class StatusTable(Base):
-    __tablename__ = "statuses"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str]
-
-
 class OrderTable(Base):
     __tablename__ = "orders"
     id: Mapped[int] = mapped_column(primary_key=True)
+    status: Mapped[str]  # enum stored as a column
     fulfillment_path: Mapped[str]
     fulfillment_date: Mapped[date]
     delivery_method: Mapped[str]  # enum stored as a column
     delivery_address: Mapped[str | None]
     delivery_point: Mapped[str | None]
+    # when the order landed in our DB (set by the database on insert)
+    received_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
     # foreign keys - the actual columns in the table
     customer_id: Mapped[int] = mapped_column(ForeignKey("customers.id"))
-    status_id: Mapped[int] = mapped_column(ForeignKey("statuses.id"))
     delivery_provider_id: Mapped[int] = mapped_column(
         ForeignKey("delivery_providers.id")
     )
 
     # relationships - Python-side navigation, not columns
     customer: Mapped["CustomerTable"] = relationship()
-    status: Mapped["StatusTable"] = relationship()
     delivery_provider: Mapped["DeliveryProviderTable"] = relationship()
     products: Mapped[list["ProductTable"]] = relationship()
