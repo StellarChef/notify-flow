@@ -1,18 +1,27 @@
+from sqlalchemy import select
+from sqlalchemy.orm import sessionmaker, selectinload
+
 from config_db import db
 from routers.schemas import Order
-from sqlalchemy.orm import sessionmaker
-from Database.db_schemas import *
+from Database.db_schemas import (
+    CustomerTable,
+    ProductTable,
+    DeliveryProviderTable,
+    OrderTable,
+    Base,
+)
 
 Session = sessionmaker(bind=db)
 
 
 class Repository:
 
-    def save_order(pydantic_order: Order):
-        with Session as session:
+    @staticmethod
+    def save_order(pydantic_order: Order) -> int:
+        with Session() as session:
             customer = CustomerTable(
                 name=pydantic_order.customer.name,
-                lastname=pydantic_order.customer.surname,
+                lastname=pydantic_order.customer.lastname,
                 email=pydantic_order.customer.email,
                 phone=pydantic_order.customer.phone,
             )
@@ -28,15 +37,58 @@ class Repository:
                 for p in pydantic_order.products
             ]
 
-            order = OrderTable(
-                status=pydantic_order.status.value,
-                fulfillment_path=...,
-                customer=customer,
-                products=products,
+            provider = session.merge(
+                DeliveryProviderTable(
+                    id=pydantic_order.delivery_method.provider.id,
+                    provider=pydantic_order.delivery_method.provider.name,
+                )
             )
 
-        session.add(order)
-        session.commit()
+            order = OrderTable(
+                order_id=pydantic_order.id,
+                status=pydantic_order.status.value,
+                fulfillment_path=pydantic_order.fulfillment_path.value,
+                ordered_at=pydantic_order.fulfillment_date.ordered_at,
+                ship_by=pydantic_order.fulfillment_date.ship_by,
+                delivery_method=pydantic_order.delivery_method.method.value,
+                delivery_address=pydantic_order.delivery_method.address,
+                delivery_point=pydantic_order.delivery_method.point,
+                customer=customer,
+                products=products,
+                delivery_provider=provider,
+            )
 
-    def fetch_order():
-        
+            session.add(order)
+            session.commit()
+            return order.id
+
+    @staticmethod
+    def fetch_orders() -> list[OrderTable]:
+        with Session() as session:
+            statement = select(OrderTable).options(
+                selectinload(OrderTable.customer),
+                selectinload(OrderTable.products),
+                selectinload(OrderTable.delivery_provider),
+            )
+            return list(session.scalars(statement).all())
+
+    @staticmethod
+    def delete_order(table: Base, id: int):
+        with Session() as session:
+            record = session.get(table, id)
+            if record is None:
+                print("Record doesn't exists")
+                return
+            session.delete(record)
+            session.commit()
+
+    @staticmethod
+    def _look_at_record(table: Base, search, col):
+        with Session() as s:
+            query = select(table).where(col.like(f"%{search}%")).offset(3)
+            result = s.scalars(query)
+            s.commit()
+            return result
+
+    def show():
+        return

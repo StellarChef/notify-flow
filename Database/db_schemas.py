@@ -46,10 +46,12 @@ class DeliveryProviderTable(Base):
 class OrderTable(Base):
     __tablename__ = "orders"
     id: Mapped[int] = mapped_column(primary_key=True)
-    status: Mapped[str]  # enum stored as a column
+    order_id: Mapped[str] = mapped_column(unique=True, index=True)
+    status: Mapped[str]
     fulfillment_path: Mapped[str]
-    fulfillment_date: Mapped[date]
-    delivery_method: Mapped[str]  # enum stored as a column
+    ordered_at: Mapped[date]
+    ship_by: Mapped[date]
+    delivery_method: Mapped[str]
     delivery_address: Mapped[str | None]
     delivery_point: Mapped[str | None]
     # when the order landed in our DB (set by the database on insert)
