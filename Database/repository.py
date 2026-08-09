@@ -1,8 +1,9 @@
 from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker, selectinload
 
-from config_db import db
+from Database.config_db import db
 from routers.schemas import Order
+from routers.enums import CLOSED
 from Database.db_schemas import (
     CustomerTable,
     ProductTable,
@@ -12,6 +13,8 @@ from Database.db_schemas import (
 )
 
 Session = sessionmaker(bind=db)
+
+CLOSED_STATUSES = [status.value for status in CLOSED]
 
 
 class Repository:
@@ -65,10 +68,14 @@ class Repository:
     @staticmethod
     def fetch_orders() -> list[OrderTable]:
         with Session() as session:
-            statement = select(OrderTable).options(
-                selectinload(OrderTable.customer),
-                selectinload(OrderTable.products),
-                selectinload(OrderTable.delivery_provider),
+            statement = (
+                select(OrderTable)
+                .where(OrderTable.status.not_in(CLOSED_STATUSES))
+                .options(
+                    selectinload(OrderTable.customer),
+                    selectinload(OrderTable.products),
+                    selectinload(OrderTable.delivery_provider),
+                )
             )
             return list(session.scalars(statement).all())
 
@@ -85,10 +92,8 @@ class Repository:
     @staticmethod
     def _look_at_record(table: Base, search, col):
         with Session() as s:
-            query = select(table).where(col.like(f"%{search}%")).offset(3)
-            result = s.scalars(query)
-            s.commit()
-            return result
+            query = select(table).where(col.like(f"%{search}%")).limit(3)
+            return s.scalars(query).all()
 
     def show():
         return

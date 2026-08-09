@@ -11,7 +11,7 @@ from routers.schemas import (
     DeliveryProvider,
     FulfillmentDate,
 )
-from enums import DeliveryMethod, FulfillmentPath, OrderStatus
+from routers.enums import DeliveryMethod, FulfillmentPath, OrderStatus
 
 # Shop-specific lookup tables live outside the repo (see .gitignore).
 CONFIG_DIR = Path(__file__).parent / "config"
@@ -47,11 +47,6 @@ class ShoperAdapter(Adapter):
     # lead time threshold: up to 2 business days = ready stock, above = sewn to order
     WAREHOUSE_MAX_DAYS = 2
 
-    def __init__(self, raw: dict):
-        self.raw = raw
-        self.products = raw["products"]
-        self.delivery_provider = raw["shipping_id"]
-
     @staticmethod
     def _parse_options(option: str) -> dict:
         # Shoper packs personalization into ONE string: "Key: Value; Key: Value"
@@ -65,19 +60,21 @@ class ShoperAdapter(Adapter):
             attributes[key.strip()] = value.strip()
         return attributes
 
-    def _parse_product(self, raw: dict) -> list[Product]:
+    @staticmethod
+    def _parse_product(raw: dict) -> list[Product]:
         return [
             Product(
                 name=product["name"],
                 sku=product["code"],
                 quantity=int(product["quantity"]),
                 price=float(product["price"]),
-                attributes=self._parse_options(product.get("option", "")),
+                attributes=ShoperAdapter._parse_options(product.get("option", "")),
             )
-            for product in self.products
+            for product in raw["products"]
         ]
 
-    def _parse_customer(self, raw: dict) -> Customer:
+    @staticmethod
+    def _parse_customer(raw: dict) -> Customer:
         # phone lives in the address block, not at order level
         billing = raw["billing_address"]
         return Customer(
@@ -87,9 +84,10 @@ class ShoperAdapter(Adapter):
             phone=billing["phone"],
         )
 
-    def _parse_delivery(self, raw: dict) -> Delivery:
+    @staticmethod
+    def _parse_delivery(raw: dict) -> Delivery:
         # the enum comes OUT of this if - single place deciding the delivery method
-        if self.delivery_provider in self.PICKUP_POINT_SHIPPING:
+        if raw["shipping_id"] in ShoperAdapter.PICKUP_POINT_SHIPPING:
             method = DeliveryMethod.PICKUP_POINT
             point = raw.get("pickup_point")  # .get - courier orders have no such key
             address = None
@@ -102,8 +100,8 @@ class ShoperAdapter(Adapter):
         # provider is built AFTER the if - needed by both branches.
         # The order carries only shipping_id; names come from the config lookup.
         provider = DeliveryProvider(
-            id=int(self.delivery_provider),
-            name=self.SHIPPING_NAMES.get(self.delivery_provider, "Undefined"),
+            id=int(raw["shipping_id"]),
+            name=ShoperAdapter.SHIPPING_NAMES.get(raw["shipping_id"], "Undefined"),
         )
 
         return Delivery(method=method, address=address, point=point, provider=provider)
@@ -119,26 +117,31 @@ class ShoperAdapter(Adapter):
                 days += 1
         return days
 
-    def _parse_fulfillment_date(self, raw: dict) -> FulfillmentDate:
+    @staticmethod
+    def _parse_fulfillment_date(raw: dict) -> FulfillmentDate:
         # both dates come straight from raw - Shoper already computed ship_by
         return FulfillmentDate(
             ordered_at=datetime.strptime(raw["date"], "%Y-%m-%d %H:%M:%S").date(),
             ship_by=datetime.strptime(raw["delivery_date"], "%Y-%m-%d").date(),
         )
 
-    def _parse_fulfillment_path(self, raw: dict) -> FulfillmentPath:
+    @staticmethod
+    def _parse_fulfillment_path(raw: dict) -> FulfillmentPath:
         # lead time = business days between order date and ship-by date
         # short (2d) = ready stock; long (14d) = sewn to order
-        dates = self._parse_fulfillment_date(raw)
-        lead_days = self._business_days_between(dates.ordered_at, dates.ship_by)
+        dates = ShoperAdapter._parse_fulfillment_date(raw)
+        lead_days = ShoperAdapter._business_days_between(
+            dates.ordered_at, dates.ship_by
+        )
 
-        if lead_days <= self.WAREHOUSE_MAX_DAYS:
+        if lead_days <= ShoperAdapter.WAREHOUSE_MAX_DAYS:
             return FulfillmentPath.WAREHOUSE
         return FulfillmentPath.PRODUCTION
 
-    def _parse_status(self, raw: dict) -> OrderStatus:
+    @staticmethod
+    def _parse_status(raw: dict) -> OrderStatus:
         # Shoper status_id -> domain enum
-        return self.ORDER_STATUSES[raw["status_id"]]
+        return ShoperAdapter.ORDER_STATUSES[raw["status_id"]]
 
     def parse(self, raw: dict) -> Order:
         # public entry point - every piece comes from a private parser

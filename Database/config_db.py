@@ -5,4 +5,4 @@ import os
 load_dotenv()
 url = os.getenv("DB_URL")
 
-db = sa.create_engine(url)
+db = sa.create_engine(url, client_encoding="utf8")

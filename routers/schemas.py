@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import date
-from enums import OrderStatus, FulfillmentPath, DeliveryMethod
+from routers.enums import OrderStatus, FulfillmentPath, DeliveryMethod
 
 
 class Customer(BaseModel):

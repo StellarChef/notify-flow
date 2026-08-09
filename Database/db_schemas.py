@@ -7,12 +7,19 @@ from sqlalchemy.orm import (
     mapped_column,
     sessionmaker,
     relationship,
+    DeclarativeBase,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 
-from config_db import db
+from .config_db import db
 
 Session = sessionmaker(bind=db)
+
+
+class Base(DeclarativeBase):
+    pass
+
+
 Base = declarative_base()
 
 

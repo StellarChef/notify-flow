@@ -15,16 +15,6 @@ shop_address = os.getenv("SHOP_ADDRESS")
 router = APIRouter()
 
 
-# @router.post("/orders")
-# def order_request(order: OrderJSON):
-# return order.order_id
-
-
-# @router.get("/orders")
-# def export(orders):
-#    return orders
-
-
 def fetch_full_order(order_id: str) -> dict:
     headers = {"Authorization": f"Bearer {api_token}"}
 
@@ -50,7 +40,13 @@ def fetch_full_order(order_id: str) -> dict:
     return order
 
 
-resp = fetch_full_order("1057")
+def fetch_full_orders() -> dict:
+    headers = {"Authorization": f"Bearer {api_token}"}
+    orders = requests.get(
+        f"{shop_address}/orders/",
+        params={"extended": "true"},
+        headers=headers,
+        encoding="utf-8",
+    ).json()
 
-with open("mok_order_1.json", "w") as w:
-    json.dump(resp, w, ensure_ascii=False, indent=2)
+    return orders["list"]
