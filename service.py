@@ -14,4 +14,4 @@ class Service:
 
         for uploaded_order in uploaded_orders:
             if uploaded_order["order_id"] not in my_orders_ids:
-                Repository.save_order()
+                Repository.save_order(s.Order(**uploaded_order))

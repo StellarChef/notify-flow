@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import requests
 import os
 import json
+from routers.enums import OrderStatus
 
 load_dotenv()
 
@@ -50,7 +51,15 @@ def fetch_orders() -> dict:
     )
     orders.encoding = "utf-8"
     data = orders.json()
-    return data["list"]
+    filtered = []
+    for order in data.get("list", []):
+        try:
+            status_id = int(order.get("status_id"))
+        except (TypeError, ValueError):
+            continue
+        if OrderStatus(status_id) is not OrderStatus.CLOSED:
+            filtered.append(order)
+    return filtered
 
 
 def update_status_order(order_id: str, status_id: int) -> None:
