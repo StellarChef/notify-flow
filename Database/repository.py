@@ -61,7 +61,7 @@ class Repository:
                 delivery_provider=provider,
             )
 
-            session.add(order)
+            session.merge(order)
             session.commit()
             return order.id
 

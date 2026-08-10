@@ -11,12 +11,10 @@ load_dotenv()
 api_token = os.getenv("SHOPER_API_KEY")
 client_id = os.getenv("SHOPER_CLIENT_ID")
 shop_address = os.getenv("SHOP_ADDRESS")
-
-router = APIRouter()
+headers = {"Authorization": f"Bearer {api_token}"}
 
 
 def fetch_full_order(order_id: str) -> dict:
-    headers = {"Authorization": f"Bearer {api_token}"}
 
     # attempt 1: the API may return products on its own with the extended flag
     order = requests.get(
@@ -40,13 +38,29 @@ def fetch_full_order(order_id: str) -> dict:
     return order
 
 
-def fetch_full_orders() -> dict:
-    headers = {"Authorization": f"Bearer {api_token}"}
+# paginacja w api shopera ?
+
+
+def fetch_orders() -> dict:
     orders = requests.get(
         f"{shop_address}/orders/",
         params={"extended": "true"},
         headers=headers,
-        encoding="utf-8",
-    ).json()
+        timeout=20,
+    )
+    orders.encoding = "utf-8"
+    data = orders.json()
+    return data["list"]
 
-    return orders["list"]
+
+def update_status_order(order_id: str, status_id: int) -> None:
+    response = requests.put(
+        f"{shop_address}/orders/{order_id}",
+        json={"status_id": status_id},
+        headers=headers,
+    )
+    response.raise_for_status()
+
+
+with open("orders.json", "w", encoding="utf-8") as f:
+    json.dump(fetch_orders(), f, ensure_ascii=False, indent=2)

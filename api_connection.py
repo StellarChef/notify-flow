@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from Database.repository import Repository
 from routers.schemas import Order
-from routers.orders import fetch_full_order
+from routers.shoper_client import fetch_full_order
 
 # from schemas import OrderJSON,enums
 from dotenv import load_dotenv
