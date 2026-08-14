@@ -11,6 +11,7 @@ from Database.db_schemas import (
     OrderTable,
     Base,
 )
+from Database.config_db import db as engine
 
 Session = sessionmaker(bind=db)
 

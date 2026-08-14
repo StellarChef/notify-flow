@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import requests
 import os
 import json
-from routers.enums import OrderStatus
+from routers.enums import OrderStatus, CLOSED
 
 load_dotenv()
 
@@ -45,7 +45,7 @@ def fetch_full_order(order_id: str) -> dict:
 def fetch_orders() -> dict:
     orders = requests.get(
         f"{shop_address}/orders/",
-        params={"extended": "true"},
+        params={"extended": "true", "page": 1, "limit": 100},
         headers=headers,
         timeout=20,
     )
@@ -57,7 +57,7 @@ def fetch_orders() -> dict:
             status_id = int(order.get("status_id"))
         except (TypeError, ValueError):
             continue
-        if OrderStatus(status_id) is not OrderStatus.CLOSED:
+        if OrderStatus(status_id) is not CLOSED:
             filtered.append(order)
     return filtered
 

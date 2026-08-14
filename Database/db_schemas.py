@@ -20,9 +20,6 @@ class Base(DeclarativeBase):
     pass
 
 
-Base = declarative_base()
-
-
 class CustomerTable(Base):
     __tablename__ = "customers"
     id: Mapped[int] = mapped_column(primary_key=True, index=True, unique=True)
@@ -50,11 +47,21 @@ class DeliveryProviderTable(Base):
     provider: Mapped[str]
 
 
+class MaterialTable(Base):
+    __tablename__ = "materials"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    type: Mapped[str]
+    color: Mapped[float]
+    quantity: Mapped[int]
+    provider: Mapped[str]
+
+
 class OrderTable(Base):
     __tablename__ = "orders"
     id: Mapped[int] = mapped_column(primary_key=True)
     order_id: Mapped[str] = mapped_column(unique=True, index=True)
-    status: Mapped[str]
+    status: Mapped[int]
     fulfillment_path: Mapped[str]
     ordered_at: Mapped[date]
     ship_by: Mapped[date]
