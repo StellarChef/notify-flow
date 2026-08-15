@@ -1,9 +1,10 @@
 from routers.shoper_client import fetch_orders
 from Database.repository import Repository
-import routers.schemas as s
+import models.schemas as s
 
 
 class Service:
+    @staticmethod
     def reception_from_shoper():
         uploaded_orders = fetch_orders()
         my_orders = Repository.fetch_orders()

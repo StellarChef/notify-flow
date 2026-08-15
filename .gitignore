@@ -17,3 +17,5 @@ statuses.json
 # shop-specific lookup tables - not for the public repo
 config/
 fetch_things.py
+
+endpoints/API.txt

@@ -1,10 +1,8 @@
-from adapters import ShoperAdapter
-from routers.shoper_client import fetch_full_order
-from routers.schemas import Order
+from models.schemas import Order
 from Database.repository import Repository
-import os
 from fastapi import APIRouter
-from service import Service
+from Services.service import Service
+from Services.serializers import Serializer
 
 router = APIRouter()
 
@@ -18,6 +16,8 @@ def sync_and_return():
 
 
 @router.post("/orders/order")
-def update_order_db(order: Order):
-    Repository.save_order(order)
+def response_captcha(order: dict):
+    Serializer.deserialize(order)
     return {"status": "updated", "order_id": order.order_id}
+
+
