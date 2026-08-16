@@ -3,6 +3,7 @@ from Database.repository import Repository
 from fastapi import APIRouter
 from Services.service import Service
 from Services.serializers import Serializer
+from routers.shoper_client import update_status_order
 
 router = APIRouter()
 
@@ -15,13 +16,15 @@ def sync_and_return():
     return Repository.fetch_orders()
 
 
-@router.post("/orders/order")
-def response_captcha(order: dict):
+@router.post("/orders/order", response_model=Order)
+def response_captcha(order: Order):
     uploaded_order = Serializer.deserialize(order)
     Repository.save_order(uploaded_order)
+
+    update_status_order(uploaded_order.order_id, uploaded_order.status)
     return {"status": "updated", "order_id": uploaded_order.order_id}
 
-@router.put("")
+@router.post("")
 def put_order(order: Order):
     #Repository.fetch_order() fetch order updated_order from db
     #Services.deserialised_order pack order to shipp to the shoper
@@ -29,10 +32,10 @@ def put_order(order: Order):
     return {"status": "succesfully updated", "order_id": order.order_id}
 
 @router.post("")
-def post_order(orders: list[Order]):
-    s_orders = []
+def post_order():
+    orders_dict = {}
+    orders = Repository.fetch_open_orders()
     for order in orders:
-        s_orders.append(Service.serialize(order))
-        #Services.deserialised_order pack order to shipp to the shoper
-    #shoper_client.update_status_order(updated_order)
-    return {"status": "succesfully updated", "order_id": order.order_id}
+        orders_dict.add(Serializer.serialize(order))
+    
+    return {"success": "true", "orders": orders_dict}

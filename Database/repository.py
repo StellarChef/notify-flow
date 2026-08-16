@@ -2,8 +2,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker, selectinload
 
 from Database.config_db import db
-from routers.schemas import Order
-from routers.enums import CLOSED
+from models.schemas import Order
+from models.enums import CLOSED
 from Database.db_schemas import (
     CustomerTable,
     ProductTable,
@@ -67,7 +67,7 @@ class Repository:
             return order.id
 
     @staticmethod
-    def fetch_orders() -> list[OrderTable]:
+    def fetch_open_orders() -> list[OrderTable]:
         with Session() as session:
             statement = (
                 select(OrderTable)
@@ -78,7 +78,13 @@ class Repository:
                     selectinload(OrderTable.delivery_provider),
                 )
             )
-            return list(session.scalars(statement).all())
+            return dict(session.scalars(statement).all())
+
+    @staticmethod
+    def fetch_all_orders():
+        with Session() as session:
+            statement = select(OrderTable)
+            return dict(session.scalars(statement).all())
 
     @staticmethod
     def delete_order(table: Base, id: int):

@@ -1,11 +1,9 @@
-from fastapi import APIRouter
-
-# from schemas import OrderJSON,enums
+from models.schemas import OrderJSON,enums
 from dotenv import load_dotenv
 import requests
 import os
 import json
-from routers.enums import OrderStatus, CLOSED
+from models.enums import OrderStatus, CLOSED
 
 load_dotenv()
 
@@ -39,6 +37,7 @@ def fetch_full_order(order_id: str) -> dict:
     return order
 
 
+
 # paginacja w api shopera ?
 
 
@@ -63,7 +62,7 @@ def fetch_orders() -> dict:
 
 
 def update_status_order(order_id: str, status_id: int) -> None:
-    response = requests.put(
+    response = requests.post(
         f"{shop_address}/orders/{order_id}",
         json={"status_id": status_id},
         headers=headers,

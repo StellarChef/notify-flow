@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-from routers.schemas import (
+from models.schemas import (
     Order,
     Customer,
     Product,
@@ -11,7 +11,7 @@ from routers.schemas import (
     DeliveryProvider,
     FulfillmentDate,
 )
-from routers.enums import DeliveryMethod, FulfillmentPath, OrderStatus
+from models.enums import DeliveryMethod, FulfillmentPath, OrderStatus
 
 # Shop-specific lookup tables live outside the repo (see .gitignore).
 CONFIG_DIR = Path(__file__).parent / "config"
