@@ -17,19 +17,13 @@ def sync_and_return():
 
 
 @router.post("/orders/order", response_model=Order)
-def response_captcha(order: Order):
+def update_order(order: Order):
     uploaded_order = Serializer.deserialize(order)
     Repository.save_order(uploaded_order)
 
     update_status_order(uploaded_order.order_id, uploaded_order.status)
     return {"status": "updated", "order_id": uploaded_order.order_id}
 
-@router.post("")
-def put_order(order: Order):
-    #Repository.fetch_order() fetch order updated_order from db
-    #Services.deserialised_order pack order to shipp to the shoper
-    #shoper_client.update_status_order(updated_order)
-    return {"status": "succesfully updated", "order_id": order.order_id}
 
 @router.post("")
 def post_order():
@@ -37,5 +31,5 @@ def post_order():
     orders = Repository.fetch_open_orders()
     for order in orders:
         orders_dict.add(Serializer.serialize(order))
-    
+
     return {"success": "true", "orders": orders_dict}
