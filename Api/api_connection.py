@@ -10,13 +10,13 @@ router = APIRouter()
 orders = Repository.fetch_orders()
 
 
-@router.post("/sync", response_model=list[Order])
+@router.post("/shoper/sync", response_model=list[Order])
 def sync_and_return():
     Service.reception_from_shoper()
-    return Repository.fetch_orders()
+    return Repository.fetch_open_orders()
 
 
-@router.post("/orders/order", response_model=Order)
+@router.put("/orders/{order_id}")
 def update_order(order: Order):
     uploaded_order = Serializer.deserialize(order)
     Repository.save_order(uploaded_order)
@@ -25,11 +25,11 @@ def update_order(order: Order):
     return {"status": "updated", "order_id": uploaded_order.order_id}
 
 
-@router.post("")
-def post_order():
+@router.post("/orders")
+def get_open_orders():
     orders_dict = {}
     orders = Repository.fetch_open_orders()
     for order in orders:
-        orders_dict.add(Serializer.serialize(order))
+        orders_dict[order.order_id] = Serializer.serialize(order)
 
     return {"success": "true", "orders": orders_dict}
