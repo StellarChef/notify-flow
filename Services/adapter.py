@@ -14,7 +14,7 @@ from models.schemas import (
 from models.enums import DeliveryMethod, FulfillmentPath, OrderStatus
 
 # Shop-specific lookup tables live outside the repo (see .gitignore).
-CONFIG_DIR = Path(__file__).parent / "config"
+CONFIG_DIR = Path(__file__).parent.parent / "config"
 
 
 def _load_config(filename: str) -> dict:
@@ -143,14 +143,15 @@ class ShoperAdapter(Adapter):
         # Shoper status_id -> domain enum
         return ShoperAdapter.ORDER_STATUSES[raw["status_id"]]
 
-    def parse(self, raw: dict) -> Order:
+    @staticmethod
+    def parse(raw: dict) -> Order:
         # public entry point - every piece comes from a private parser
-        customer = self._parse_customer(raw)
-        products = self._parse_product(raw)
-        status = self._parse_status(raw)
-        fulfillment_path = self._parse_fulfillment_path(raw)
-        fulfillment_date = self._parse_fulfillment_date(raw)
-        delivery = self._parse_delivery(raw)
+        customer = ShoperAdapter._parse_customer(raw)
+        products = ShoperAdapter._parse_product(raw)
+        status = ShoperAdapter._parse_status(raw)
+        fulfillment_path = ShoperAdapter._parse_fulfillment_path(raw)
+        fulfillment_date = ShoperAdapter._parse_fulfillment_date(raw)
+        delivery = ShoperAdapter._parse_delivery(raw)
 
         return Order(
             id=raw["order_id"],

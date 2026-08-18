@@ -77,13 +77,13 @@ class Repository:
                     selectinload(OrderTable.delivery_provider),
                 )
             )
-            return dict(session.scalars(statement).all())
+            return list(session.scalars(statement).all())
 
     @staticmethod
-    def fetch_all_orders():
+    def fetch_all_orders() -> list:
         with Session() as session:
             statement = select(OrderTable)
-            return dict(session.scalars(statement).all())
+            return list(session.scalars(statement).all())
 
     @staticmethod
     def delete_order(table: Base, id: int):

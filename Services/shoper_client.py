@@ -1,4 +1,3 @@
-from models.schemas import OrderJSON,enums
 from dotenv import load_dotenv
 import requests
 import os
@@ -37,11 +36,7 @@ def fetch_full_order(order_id: str) -> dict:
     return order
 
 
-
-# paginacja w api shopera ?
-
-
-def fetch_orders() -> dict:
+def fetch_open_orders() -> dict:
     orders = requests.get(
         f"{shop_address}/orders/",
         params={"extended": "true", "page": 1, "limit": 100},
@@ -56,7 +51,7 @@ def fetch_orders() -> dict:
             status_id = int(order.get("status_id"))
         except (TypeError, ValueError):
             continue
-        if OrderStatus(status_id) is not CLOSED:
+        if OrderStatus(status_id) not in CLOSED:
             filtered.append(order)
     return filtered
 
@@ -68,7 +63,3 @@ def update_status_order(order_id: str, status_id: int) -> None:
         headers=headers,
     )
     response.raise_for_status()
-
-
-with open("orders.json", "w", encoding="utf-8") as f:
-    json.dump(fetch_orders(), f, ensure_ascii=False, indent=2)

@@ -3,11 +3,9 @@ from Database.repository import Repository
 from fastapi import APIRouter
 from Services.service import Service
 from Services.serializers import Serializer
-from routers.shoper_client import update_status_order
+from Services.shoper_client import update_status_order
 
 router = APIRouter()
-
-orders = Repository.fetch_orders()
 
 
 @router.post("/shoper/sync", response_model=list[Order])
