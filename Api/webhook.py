@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = APIRouter()
+router = APIRouter()
 
 
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
