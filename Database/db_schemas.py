@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from decimal import Decimal
 
 from sqlalchemy import ForeignKey, func
 from sqlalchemy.orm import (
@@ -22,7 +23,8 @@ class Base(DeclarativeBase):
 
 class CustomerTable(Base):
     __tablename__ = "customers"
-    id: Mapped[int] = mapped_column(primary_key=True, index=True, unique=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(unique=True)
     name: Mapped[str]
     lastname: Mapped[str]
     email: Mapped[str]
@@ -35,7 +37,7 @@ class ProductTable(Base):
     name: Mapped[str]
     sku: Mapped[str]
     quantity: Mapped[int]
-    price: Mapped[float]
+    price: Mapped[Decimal]
     attributes: Mapped[dict] = mapped_column(JSONB)
     # every product line belongs to one order
     order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"))
@@ -80,4 +82,4 @@ class OrderTable(Base):
     # relationships - Python-side navigation, not columns
     customer: Mapped["CustomerTable"] = relationship()
     delivery_provider: Mapped["DeliveryProviderTable"] = relationship()
-    products: Mapped[list["ProductTable"]] = relationship()
+    products: Mapped[list["ProductTable"]] = relationship(cascade="all, delete=orphan")

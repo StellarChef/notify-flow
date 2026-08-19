@@ -23,6 +23,7 @@ class Repository:
     def save_order(pydantic_order: Order) -> int:
         with Session() as session:
             customer = CustomerTable(
+                user_id=pydantic_order.customer.user_id,
                 name=pydantic_order.customer.name,
                 lastname=pydantic_order.customer.lastname,
                 email=pydantic_order.customer.email,

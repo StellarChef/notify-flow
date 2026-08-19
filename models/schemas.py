@@ -1,9 +1,11 @@
 from pydantic import BaseModel
 from datetime import date
+from decimal import Decimal
 from models.enums import OrderStatus, FulfillmentPath, DeliveryMethod
 
 
 class Customer(BaseModel):
+    user_id: int
     name: str
     lastname: str
     email: str
@@ -14,7 +16,7 @@ class Product(BaseModel):
     name: str
     sku: str
     quantity: int
-    price: float
+    price: Decimal
     attributes: dict
 
 

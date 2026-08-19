@@ -1,6 +1,7 @@
 import json
 from abc import ABC, abstractmethod
 from datetime import date, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 
 from models.schemas import (
@@ -67,7 +68,7 @@ class ShoperAdapter(Adapter):
                 name=product["name"],
                 sku=product["code"],
                 quantity=int(product["quantity"]),
-                price=float(product["price"]),
+                price=Decimal(product["price"]),
                 attributes=ShoperAdapter._parse_options(product.get("option", "")),
             )
             for product in raw["products"]
@@ -78,6 +79,7 @@ class ShoperAdapter(Adapter):
         # phone lives in the address block, not at order level
         billing = raw["billing_address"]
         return Customer(
+            user_id=int(raw["user_id"]),
             name=billing["firstname"],
             lastname=billing["lastname"],
             email=raw["email"],
