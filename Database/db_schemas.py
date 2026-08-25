@@ -41,9 +41,7 @@ class ProductTable(Base):
     attributes: Mapped[dict] = mapped_column(JSONB)
     # every product line belongs to one order
     order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"))
-    materials: Mapped[list["MaterialUsageTable"]] = relationship(
-        cascade="all, delete-orphan"
-    )
+    materials: Mapped[list[MaterialTable]] = relationship(cascade="all, delete-orphan")
 
 
 class DeliveryProviderTable(Base):
