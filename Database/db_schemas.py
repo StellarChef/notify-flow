@@ -1,7 +1,7 @@
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import ForeignKey, func
+from sqlalchemy import ForeignKey, func, DateTime
 from sqlalchemy.orm import (
     Mapped,
     declarative_base,
@@ -41,6 +41,9 @@ class ProductTable(Base):
     attributes: Mapped[dict] = mapped_column(JSONB)
     # every product line belongs to one order
     order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"))
+    materials: Mapped[list["MaterialUsageTable"]] = relationship(
+        cascade="all, delete-orphan"
+    )
 
 
 class DeliveryProviderTable(Base):
@@ -63,10 +66,10 @@ class OrderTable(Base):
     __tablename__ = "orders"
     id: Mapped[int] = mapped_column(primary_key=True)
     order_id: Mapped[str] = mapped_column(unique=True, index=True)
-    status: Mapped[int]
+    status: Mapped[int] = mapped_column(index=True)
     fulfillment_path: Mapped[str]
-    ordered_at: Mapped[date]
-    ship_by: Mapped[date]
+    ordered_at: Mapped[datetime] = mapped_column(DateTime(True))
+    ship_by: Mapped[datetime] = mapped_column(DateTime(True))
     delivery_method: Mapped[str]
     delivery_address: Mapped[str | None]
     delivery_point: Mapped[str | None]
@@ -82,4 +85,4 @@ class OrderTable(Base):
     # relationships - Python-side navigation, not columns
     customer: Mapped["CustomerTable"] = relationship()
     delivery_provider: Mapped["DeliveryProviderTable"] = relationship()
-    products: Mapped[list["ProductTable"]] = relationship(cascade="all, delete=orphan")
+    products: Mapped[list["ProductTable"]] = relationship(cascade="all, delete-orphan")

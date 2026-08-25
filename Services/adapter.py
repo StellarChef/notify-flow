@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from models.schemas import (
     Order,
@@ -47,6 +48,9 @@ class ShoperAdapter(Adapter):
 
     # lead time threshold: up to 2 business days = ready stock, above = sewn to order
     WAREHOUSE_MAX_DAYS = 2
+
+    # Timezone
+    SHOP_TZ = ZoneInfo("Europe/Warsaw")
 
     @staticmethod
     def _parse_options(option: str) -> dict:
@@ -123,8 +127,12 @@ class ShoperAdapter(Adapter):
     def _parse_fulfillment_date(raw: dict) -> FulfillmentDate:
         # both dates come straight from raw - Shoper already computed ship_by
         return FulfillmentDate(
-            ordered_at=datetime.strptime(raw["date"], "%Y-%m-%d %H:%M:%S").date(),
-            ship_by=datetime.strptime(raw["delivery_date"], "%Y-%m-%d").date(),
+            ordered_at=datetime.strptime(raw["date"], "%Y-%m-%d %H:%M:%S").replace(
+                tzinfo=ShoperAdapter.SHOP_TZ
+            ),
+            ship_by=datetime.strptime(raw["delivery_date"], "%Y-%m-%d").replace(
+                tzinfo=ShoperAdapter.SHOP_TZ
+            ),
         )
 
     @staticmethod

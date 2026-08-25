@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, AwareDatetime
 from datetime import date
 from decimal import Decimal
 from models.enums import OrderStatus, FulfillmentPath, DeliveryMethod
@@ -33,8 +33,8 @@ class Delivery(BaseModel):
 
 
 class FulfillmentDate(BaseModel):
-    ordered_at: date
-    ship_by: date
+    ordered_at: AwareDatetime
+    ship_by: AwareDatetime
 
 
 class Order(BaseModel):
