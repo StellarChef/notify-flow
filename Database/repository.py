@@ -11,6 +11,7 @@ from Database.db_schemas import (
     OrderTable,
     Base,
 )
+from sqlalchemy.dialects.postgresql import insert
 
 Session = sessionmaker(bind=db)
 
@@ -22,15 +23,44 @@ class Repository:
     @staticmethod
     def save_order(pydantic_order: Order) -> int:
         with Session() as session:
-            customer = CustomerTable(
-                user_id=pydantic_order.customer.user_id,
-                name=pydantic_order.customer.name,
-                lastname=pydantic_order.customer.lastname,
-                email=pydantic_order.customer.email,
-                phone=pydantic_order.customer.phone,
+            customer = session.scalar(
+                select(CustomerTable).where(
+                    CustomerTable.user_id == pydantic_order.customer.user_id
+                )
+            )
+            if customer is None:
+                customer = CustomerTable(
+                    user_id=pydantic_order.customer.user_id,
+                    name=pydantic_order.customer.name,
+                    lastname=pydantic_order.customer.lastname,
+                    email=pydantic_order.customer.email,
+                    phone=pydantic_order.customer.phone,
+                )
+
+            provider = session.merge(
+                DeliveryProviderTable(
+                    id=pydantic_order.delivery_method.provider.id,
+                    provider=pydantic_order.delivery_method.provider.name,
+                )
             )
 
-            products = [
+            order = session.scalar(
+                select(OrderTable).where(OrderTable.order_id == pydantic_order.id)
+            )
+            if order is None:
+                order = OrderTable(order_id=pydantic_order.id)
+                session.add(order)
+
+            order.status = pydantic_order.status.value
+            order.fulfillment_path = pydantic_order.fulfillment_path.value
+            order.ordered_at = pydantic_order.fulfillment_date.ordered_at
+            order.ship_by = pydantic_order.fulfillment_date.ship_by
+            order.delivery_method = pydantic_order.delivery_method.method.value
+            order.delivery_address = pydantic_order.delivery_method.address
+            order.delivery_point = pydantic_order.delivery_method.point
+            order.customer = customer
+            order.delivery_provider = provider
+            order.products = [
                 ProductTable(
                     name=p.name,
                     sku=p.sku,
@@ -41,28 +71,6 @@ class Repository:
                 for p in pydantic_order.products
             ]
 
-            provider = session.merge(
-                DeliveryProviderTable(
-                    id=pydantic_order.delivery_method.provider.id,
-                    provider=pydantic_order.delivery_method.provider.name,
-                )
-            )
-
-            order = OrderTable(
-                order_id=pydantic_order.id,
-                status=pydantic_order.status.value,
-                fulfillment_path=pydantic_order.fulfillment_path.value,
-                ordered_at=pydantic_order.fulfillment_date.ordered_at,
-                ship_by=pydantic_order.fulfillment_date.ship_by,
-                delivery_method=pydantic_order.delivery_method.method.value,
-                delivery_address=pydantic_order.delivery_method.address,
-                delivery_point=pydantic_order.delivery_method.point,
-                customer=customer,
-                products=products,
-                delivery_provider=provider,
-            )
-
-            session.merge(order)
             session.commit()
             return order.id
 
@@ -83,7 +91,11 @@ class Repository:
     @staticmethod
     def fetch_all_orders() -> list:
         with Session() as session:
-            statement = select(OrderTable)
+            statement = select(OrderTable).options(
+                selectinload(OrderTable.customer),
+                selectinload(OrderTable.products),
+                selectinload(OrderTable.delivery_provider),
+            )
             return list(session.scalars(statement).all())
 
     @staticmethod
@@ -102,5 +114,20 @@ class Repository:
             query = select(table).where(col.like(f"%{search}%")).limit(3)
             return s.scalars(query).all()
 
-    def show():
-        return
+    # DEBUG: pretty-print a list of orders as a table
+    @staticmethod
+    def show(orders: list[OrderTable]):
+        header = (
+            f"{'order_id':<8} | {'status':>6} | {'customer':<22} | "
+            f"{'prod':>4} | {'delivery':<13} | point / address"
+        )
+        print(header)
+        print("-" * len(header))
+        for o in orders:
+            customer = f"{o.customer.name} {o.customer.lastname}"
+            dest = o.delivery_point or o.delivery_address or "-"
+            print(
+                f"{o.order_id:<8} | {o.status:>6} | {customer:<22} | "
+                f"{len(o.products):>4} | {o.delivery_method:<13} | {dest}"
+            )
+        print(f"\n({len(orders)} orders total)")
