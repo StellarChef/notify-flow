@@ -1,7 +1,7 @@
 from pydantic import BaseModel, AwareDatetime
 from datetime import date
 from decimal import Decimal
-from models.enums import OrderStatus, FulfillmentPath, DeliveryMethod
+from models.enums import OrderStatus, FulfillmentPath, DeliveryMethod, ProductType
 
 
 class Customer(BaseModel):
@@ -17,6 +17,8 @@ class Product(BaseModel):
     sku: str
     quantity: int
     price: Decimal
+    # decided per order line by the adapter, from the size attribute key
+    product_type: ProductType
     attributes: dict
 
 

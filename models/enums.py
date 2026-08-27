@@ -22,9 +22,27 @@ CLOSED = {
 }
 
 
+class ProductType(Enum):
+    # Decided PER ORDER LINE, not in the catalog - the same SKU may one day sell
+    # both ways. Derived in the adapter only, from the size attribute key.
+    STANDARD = "standard"  # off-the-shelf size, "Rozmiar: M"
+    MADE_TO_ORDER = "made_to_order"  # sewn to measure, "Rozmiar startowy" + measurements
+
+
 class FulfillmentPath(Enum):
+    # HOW the line gets fulfilled - mutable STATE, unlike ProductType.
+    # MADE_TO_ORDER is always PRODUCTION. STANDARD starts in WAREHOUSE and drops
+    # to PRODUCTION when stock runs out. Never the other way round.
     PRODUCTION = "production"
     WAREHOUSE = "warehouse"
+
+
+class MaterialUsageKind(Enum):
+    # Filled in by the cutter after the job - the norm is only a hint, since
+    # faulty material changes how many metres actually go into the garment.
+    USED = "used"  # went into the product
+    WASTE = "waste"  # faulty pattern/material - left stock, never reached the product
+    RETURN = "return"  # correction or cancellation - goes back on stock
 
 
 class DeliveryMethod(Enum):

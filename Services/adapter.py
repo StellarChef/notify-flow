@@ -13,7 +13,7 @@ from models.schemas import (
     DeliveryProvider,
     FulfillmentDate,
 )
-from models.enums import DeliveryMethod, FulfillmentPath, OrderStatus
+from models.enums import DeliveryMethod, FulfillmentPath, OrderStatus, ProductType
 
 # Shop-specific lookup tables live outside the repo (see .gitignore).
 CONFIG_DIR = Path(__file__).parent.parent / "config"
@@ -46,6 +46,11 @@ class ShoperAdapter(Adapter):
     # shipping_id values that mean "collect at a point" (rest = delivery to address)
     PICKUP_POINT_SHIPPING = {"1", "7", "8"}
 
+    # attribute key that marks a made-to-order line. A plain "Rozmiar" is a
+    # fixed size off the shelf; "Rozmiar startowy" is only a starting point,
+    # with the real measurements following in the same option string.
+    MADE_TO_ORDER_SIZE_KEY = "Rozmiar startowy"
+
     # lead time threshold: up to 2 business days = ready stock, above = sewn to order
     WAREHOUSE_MAX_DAYS = 2
 
@@ -66,17 +71,31 @@ class ShoperAdapter(Adapter):
         return attributes
 
     @staticmethod
+    def _parse_product_type(attributes: dict) -> ProductType:
+        # the enum comes OUT of this if - single place deciding the product type
+        if any(
+            key.startswith(ShoperAdapter.MADE_TO_ORDER_SIZE_KEY) for key in attributes
+        ):
+            return ProductType.MADE_TO_ORDER
+        return ProductType.STANDARD
+
+    @staticmethod
     def _parse_product(raw: dict) -> list[Product]:
-        return [
-            Product(
-                name=product["name"],
-                sku=product["code"],
-                quantity=int(product["quantity"]),
-                price=Decimal(product["price"]),
-                attributes=ShoperAdapter._parse_options(product.get("option", "")),
+        products = []
+        for product in raw["products"]:
+            # parsed once - the type is derived from these same attributes
+            attributes = ShoperAdapter._parse_options(product.get("option", ""))
+            products.append(
+                Product(
+                    name=product["name"],
+                    sku=product["code"],
+                    quantity=int(product["quantity"]),
+                    price=Decimal(product["price"]),
+                    product_type=ShoperAdapter._parse_product_type(attributes),
+                    attributes=attributes,
+                )
             )
-            for product in raw["products"]
-        ]
+        return products
 
     @staticmethod
     def _parse_customer(raw: dict) -> Customer:

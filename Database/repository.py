@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, exists
 from sqlalchemy.orm import sessionmaker, selectinload
 
 from Database.config_db import db
@@ -67,6 +67,7 @@ class Repository:
                     quantity=p.quantity,
                     price=p.price,
                     attributes=p.attributes,
+                    product_type=p.product_type.value,
                 )
                 for p in pydantic_order.products
             ]
@@ -99,14 +100,14 @@ class Repository:
             return list(session.scalars(statement).all())
 
     @staticmethod
-    def delete_order(table: Base, id: int):
+    def delete_order(id: int):
         with Session() as session:
-            record = session.get(table, id)
-            if record is None:
-                print("Record doesn't exists")
-                return
-            session.delete(record)
+            order = session.scalar(select(OrderTable).where(OrderTable.order_id == id))
+            if bool is None:
+                return False
+            session.delete(order)
             session.commit()
+            return True
 
     @staticmethod
     def _look_at_record(table: Base, search, col):
