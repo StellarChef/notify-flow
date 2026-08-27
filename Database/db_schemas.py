@@ -38,10 +38,10 @@ class ProductTable(Base):
     sku: Mapped[str]
     quantity: Mapped[int]
     price: Mapped[Decimal]
+    product_type: Mapped[str] = mapped_column(index=True)
     attributes: Mapped[dict] = mapped_column(JSONB)
     # every product line belongs to one order
     order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"))
-    materials: Mapped[list[MaterialTable]] = relationship(cascade="all, delete-orphan")
 
 
 class DeliveryProviderTable(Base):
