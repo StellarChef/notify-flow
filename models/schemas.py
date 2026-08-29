@@ -1,10 +1,17 @@
 from pydantic import BaseModel, AwareDatetime
 from datetime import date
 from decimal import Decimal
-from models.enums import OrderStatus, FulfillmentPath, DeliveryMethod, ProductType
+from models.enums import (
+    OrderStatus,
+    FulfillmentPath,
+    DeliveryMethod,
+    ProductType,
+    UserRole,
+)
 
 
 class Customer(BaseModel):
+    model_config = {"from_attributes": True}
     user_id: int
     name: str
     lastname: str
@@ -13,6 +20,7 @@ class Customer(BaseModel):
 
 
 class Product(BaseModel):
+    model_config = {"from_attributes": True}
     name: str
     sku: str
     quantity: int
@@ -47,3 +55,10 @@ class Order(BaseModel):
     fulfillment_path: FulfillmentPath
     fulfillment_date: FulfillmentDate
     delivery_method: Delivery
+
+
+class User(BaseModel):
+    id: int
+    role: UserRole
+    login: str
+    password: str
