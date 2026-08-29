@@ -84,3 +84,12 @@ class OrderTable(Base):
     customer: Mapped["CustomerTable"] = relationship()
     delivery_provider: Mapped["DeliveryProviderTable"] = relationship()
     products: Mapped[list["ProductTable"]] = relationship(cascade="all, delete-orphan")
+
+
+class UsersTable(Base):
+    __tablename__ = "users"
+    id: Mapped[int] = mapped_column(primary_key=True, unique=True)
+    role: Mapped[str]
+    login: Mapped[str] = mapped_column(unique=True)
+    password: Mapped[str]
+    is_active: Mapped[bool]

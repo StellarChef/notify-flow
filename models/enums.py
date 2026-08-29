@@ -45,6 +45,13 @@ class MaterialUsageKind(Enum):
     RETURN = "return"  # correction or cancellation - goes back on stock
 
 
+class UserRole(Enum):
+    # Not a secret, but an authorization decision: always read it from the DB or
+    # a signed token, never from anything the client sends.
+    USER = "user"  # reads orders, reports material usage
+    ADMIN = "admin"  # runs orders and production, manages accounts and devices
+
+
 class DeliveryMethod(Enum):
     PICKUP_POINT = "pickup_point"
     HOME_DELIVERY = "home_delivery"

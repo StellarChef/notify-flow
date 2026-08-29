@@ -62,3 +62,4 @@ class User(BaseModel):
     role: UserRole
     login: str
     password: str
+    is_active: bool
