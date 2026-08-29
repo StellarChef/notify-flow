@@ -1,6 +1,7 @@
+from models.enums import OrderStatus
 from models.schemas import Order
 from Database.repository import Repository
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from Services.service import Service
 from Services.serializers import Serializer
 from Services.shoper_client import update_status_order
@@ -16,13 +17,20 @@ def sync_and_return():
     return Repository.fetch_open_orders()
 
 
-@router.put("/orders/{order_id}")
-def update_order(order: Order):
-    uploaded_order = Serializer.deserialize(order)
-    Repository.save_order(uploaded_order)
+@router.put("/orders/{order_id}/status")
+def update_order_status(
+    order_id: str,
+    status: OrderStatus,
+):
+    order = Repository.fetch_order_by_id(order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    order = Serializer.to_schema(order)  # validate and convert to Pydantic model
+    order.status = status
+    Repository.upsert_order(order)
 
-    update_status_order(uploaded_order.order_id, uploaded_order.status)
-    return {"status": "updated", "order_id": uploaded_order.order_id}
+    # update_status_order(order.order_id, order.status)
+    return {"status": "updated", "order_id": order.id, "new_status": order.status.value}
 
 
 @router.get("/orders", response_model=list[Order])
