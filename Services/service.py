@@ -13,7 +13,7 @@ class Service:
 
         for uploaded_order in uploaded_orders:
             if uploaded_order["order_id"] not in my_orders_ids:
-                Repository.save_order(ShoperAdapter.parse(uploaded_order))
+                Repository.upsert_order(ShoperAdapter.parse(uploaded_order))
 
     def reception_from_warehouse():
         return  # build this

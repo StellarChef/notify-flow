@@ -1,6 +1,5 @@
-from sqlalchemy import select, exists
+from sqlalchemy import delete, select
 from sqlalchemy.orm import sessionmaker, selectinload
-
 from Database.config_db import db
 from models.schemas import Order
 from models.enums import CLOSED
@@ -21,59 +20,78 @@ CLOSED_STATUSES = [status.value for status in CLOSED]
 class Repository:
 
     @staticmethod
-    def save_order(pydantic_order: Order) -> int:
+    def _upsert(session, table, values: dict, conflict_columns: list[str]) -> int:
+        stmt = (
+            insert(table)
+            .values(**values)
+            .on_conflict_do_update(index_elements=conflict_columns, set_=values)
+            .returning(table.id)
+        )
+        return session.scalar(stmt)
+
+    @staticmethod
+    def upsert_order(pydantic_order: Order) -> int:
         with Session() as session:
-            customer = session.scalar(
-                select(CustomerTable).where(
-                    CustomerTable.user_id == pydantic_order.customer.user_id
-                )
-            )
-            if customer is None:
-                customer = CustomerTable(
-                    user_id=pydantic_order.customer.user_id,
-                    name=pydantic_order.customer.name,
-                    lastname=pydantic_order.customer.lastname,
-                    email=pydantic_order.customer.email,
-                    phone=pydantic_order.customer.phone,
-                )
-
-            provider = session.merge(
-                DeliveryProviderTable(
-                    id=pydantic_order.delivery_method.provider.id,
-                    provider=pydantic_order.delivery_method.provider.name,
-                )
+            customer_id = Repository._upsert(
+                session,
+                CustomerTable,
+                pydantic_order.customer.model_dump(),
+                ["user_id"],
             )
 
-            order = session.scalar(
-                select(OrderTable).where(OrderTable.order_id == pydantic_order.id)
+            provider_id = Repository._upsert(
+                session,
+                DeliveryProviderTable,
+                {
+                    "id": pydantic_order.delivery_method.provider.id,
+                    "provider": pydantic_order.delivery_method.provider.name,
+                },
+                ["id"],
             )
-            if order is None:
-                order = OrderTable(order_id=pydantic_order.id)
-                session.add(order)
 
-            order.status = pydantic_order.status.value
-            order.fulfillment_path = pydantic_order.fulfillment_path.value
-            order.ordered_at = pydantic_order.fulfillment_date.ordered_at
-            order.ship_by = pydantic_order.fulfillment_date.ship_by
-            order.delivery_method = pydantic_order.delivery_method.method.value
-            order.delivery_address = pydantic_order.delivery_method.address
-            order.delivery_point = pydantic_order.delivery_method.point
-            order.customer = customer
-            order.delivery_provider = provider
-            order.products = [
-                ProductTable(
-                    name=p.name,
-                    sku=p.sku,
-                    quantity=p.quantity,
-                    price=p.price,
-                    attributes=p.attributes,
-                    product_type=p.product_type.value,
+            order_pk = Repository._upsert(
+                session,
+                OrderTable,
+                {
+                    "order_id": pydantic_order.id,
+                    "status": pydantic_order.status.value,
+                    "fulfillment_path": pydantic_order.fulfillment_path.value,
+                    "ordered_at": pydantic_order.fulfillment_date.ordered_at,
+                    "ship_by": pydantic_order.fulfillment_date.ship_by,
+                    "delivery_method": pydantic_order.delivery_method.method.value,
+                    "delivery_address": pydantic_order.delivery_method.address,
+                    "delivery_point": pydantic_order.delivery_method.point,
+                    "customer_id": customer_id,
+                    "delivery_provider_id": provider_id,
+                },
+                ["order_id"],
+            )
+
+            # Order lines have no natural key, so they are replaced wholesale.
+            # This resets their ids on every sync - harmless while a line only
+            # mirrors Shoper, but revisit once the warehouse writes to them.
+            session.execute(
+                delete(ProductTable).where(ProductTable.order_id == order_pk)
+            )
+            if pydantic_order.products:
+                session.execute(
+                    insert(ProductTable),
+                    [
+                        {
+                            "order_id": order_pk,
+                            "name": p.name,
+                            "sku": p.sku,
+                            "quantity": p.quantity,
+                            "price": p.price,
+                            "attributes": p.attributes,
+                            "product_type": p.product_type.value,
+                        }
+                        for p in pydantic_order.products
+                    ],
                 )
-                for p in pydantic_order.products
-            ]
 
             session.commit()
-            return order.id
+            return order_pk
 
     @staticmethod
     def fetch_open_orders() -> list[OrderTable]:
@@ -100,10 +118,24 @@ class Repository:
             return list(session.scalars(statement).all())
 
     @staticmethod
+    def fetch_order_by_id(order_id: str) -> OrderTable | None:
+        with Session() as session:
+            stmt = session.scalar(
+                select(OrderTable)
+                .where(OrderTable.order_id == order_id)
+                .options(
+                    selectinload(OrderTable.customer),
+                    selectinload(OrderTable.products),
+                    selectinload(OrderTable.delivery_provider),
+                )
+            )
+            return stmt
+
+    @staticmethod
     def delete_order(id: int):
         with Session() as session:
             order = session.scalar(select(OrderTable).where(OrderTable.order_id == id))
-            if bool is None:
+            if order is None:
                 return False
             session.delete(order)
             session.commit()

@@ -31,7 +31,7 @@ def add_to_database():
     for path in files:
         raw = json.loads(path.read_text(encoding="utf-8"))
         order = ShoperAdapter.parse(raw)
-        Repository.save_order(order)
+        Repository.upsert_order(order)
         print(f"  pushed order {order.id}")
     print(f"({len(files)} orders pushed to DB)")
 

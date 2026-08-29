@@ -18,7 +18,7 @@ def receive_order_webhook(order: dict, x_webhook_secret: str = Header(...)):
     if x_webhook_secret != WEBHOOK_SECRET:
         raise HTTPException(status_code=401, detail="Invalid webhook secret")
     p_order = ShoperAdapter.parse(order)
-    Repository.save_order(ShoperAdapter.parse(order))
+    Repository.upsert_order(ShoperAdapter.parse(order))
 
     print("Webhook received")
     return {"status": "delivered"}
