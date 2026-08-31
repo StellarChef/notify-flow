@@ -11,12 +11,15 @@ Session = sessionmaker(bind=db)
 
 class UserRepository:
     @staticmethod
-    def create_user(login: str, password_hash: str, role: UserRole) -> UserOut:
+    def create_user(
+        login: str, email: str, password_hash: str, role: UserRole
+    ) -> UserOut:
         # Takes an already-hashed password: the repository never sees plaintext.
         with Session() as session:
             new_user = UsersTable(
                 role=role.value,
                 login=login,
+                email=email,
                 password=password_hash,
                 is_active=True,
             )
@@ -41,6 +44,7 @@ class UserRepository:
                     id=stmt.id,
                     role=stmt.role,
                     login=stmt.login,
+                    email=stmt.email,
                     password=stmt.password,
                     is_active=stmt.is_active,
                 )

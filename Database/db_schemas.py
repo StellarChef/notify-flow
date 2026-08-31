@@ -90,6 +90,7 @@ class UsersTable(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True, unique=True)
     role: Mapped[str]
-    login: Mapped[str] = mapped_column(unique=True)
+    login: Mapped[str] = mapped_column(unique=True)  # what you sign in with
+    email: Mapped[str] = mapped_column(unique=True)  # contact + future password reset
     password: Mapped[str]
     is_active: Mapped[bool]

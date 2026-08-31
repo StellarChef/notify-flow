@@ -1,4 +1,4 @@
-from pydantic import BaseModel, AwareDatetime
+from pydantic import BaseModel, AwareDatetime, EmailStr
 from datetime import date
 from decimal import Decimal
 from models.enums import (
@@ -63,6 +63,7 @@ class User(BaseModel):
     id: int
     role: UserRole
     login: str
+    email: EmailStr
     password: str
     is_active: bool
 
@@ -70,6 +71,7 @@ class User(BaseModel):
 class UserCreate(BaseModel):
     # Registration input: the plaintext password stops here, at the API edge.
     login: str
+    email: EmailStr  # EmailStr rejects malformed addresses before they hit the DB
     password: str
 
 
@@ -78,5 +80,6 @@ class UserOut(BaseModel):
     model_config = {"from_attributes": True}
     id: int
     login: str
+    email: EmailStr
     role: UserRole
     is_active: bool

@@ -12,7 +12,7 @@ from Services.auth_service import Auth
 load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = ["HS256"]
+ALGORITHM = "HS256"
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
