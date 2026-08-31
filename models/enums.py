@@ -48,6 +48,7 @@ class MaterialUsageKind(Enum):
 class UserRole(Enum):
     # Not a secret, but an authorization decision: always read it from the DB or
     # a signed token, never from anything the client sends.
+    PENDING = "pending"  # just registered, no access at all until an admin promotes
     USER = "user"  # reads orders, reports material usage
     ADMIN = "admin"  # runs orders and production, manages accounts and devices
 

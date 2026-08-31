@@ -1,7 +1,8 @@
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload, sessionmaker
+from sqlalchemy.orm import sessionmaker
 from Database.config_db import db
-from models.schemas import User
+from models.schemas import User, UserOut
+from models.enums import UserRole
 from Database.db_schemas import UsersTable
 from sqlalchemy.exc import IntegrityError
 
@@ -10,28 +11,30 @@ Session = sessionmaker(bind=db)
 
 class UserRepository:
     @staticmethod
-    def create_user(user: User) -> dict:
+    def create_user(login: str, password_hash: str, role: UserRole) -> UserOut:
+        # Takes an already-hashed password: the repository never sees plaintext.
         with Session() as session:
-            try:
-                new_user = UsersTable(
-                    role=user.role.value,
-                    login=user.login,
-                    password=user.password,
-                    is_active=user.is_active,
-                )
-            except IntegrityError as e:
-                raise ValueError(f"Login '{user.login}' already exists.") from e
+            new_user = UsersTable(
+                role=role.value,
+                login=login,
+                password=password_hash,
+                is_active=True,
+            )
             session.add(new_user)
-            session.commit()
-            return {"login": new_user.login}
+            try:
+                # the UNIQUE constraint on login fires HERE, not on construction
+                session.commit()
+            except IntegrityError as e:
+                session.rollback()
+                raise ValueError(f"Login '{login}' already exists.") from e
+            # built while the session is still open, so the row is not detached
+            return UserOut.model_validate(new_user)
 
     @staticmethod
     def fetch_for_login_check(login: str) -> User | None:
         with Session() as session:
             stmt = session.scalar(
-                select(UsersTable)
-                .where(UsersTable.login == login)
-                .options(selectinload(UsersTable))
+                select(UsersTable).where(UsersTable.login == login)
             )
             if stmt:
                 return User(

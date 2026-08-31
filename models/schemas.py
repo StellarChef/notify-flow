@@ -58,8 +58,25 @@ class Order(BaseModel):
 
 
 class User(BaseModel):
+    # Internal model - carries the password hash, so it must never be used as a
+    # response_model. Use UserOut for anything that leaves the API.
     id: int
     role: UserRole
     login: str
     password: str
+    is_active: bool
+
+
+class UserCreate(BaseModel):
+    # Registration input: the plaintext password stops here, at the API edge.
+    login: str
+    password: str
+
+
+class UserOut(BaseModel):
+    # Registration output - no password, no hash.
+    model_config = {"from_attributes": True}
+    id: int
+    login: str
+    role: UserRole
     is_active: bool
