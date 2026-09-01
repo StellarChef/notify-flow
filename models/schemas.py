@@ -75,6 +75,13 @@ class UserCreate(BaseModel):
     password: str
 
 
+class UserLogin(BaseModel):
+    # Sign-in input. Separate from UserCreate on purpose: registration may grow
+    # fields (email confirmation, terms) that must never be required to log in.
+    login: str
+    password: str
+
+
 class UserOut(BaseModel):
     # Registration output - no password, no hash.
     model_config = {"from_attributes": True}
@@ -83,3 +90,8 @@ class UserOut(BaseModel):
     email: EmailStr
     role: UserRole
     is_active: bool
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str

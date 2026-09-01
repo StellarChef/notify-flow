@@ -2,19 +2,17 @@ from models.enums import OrderStatus
 from models.schemas import Order
 from Database.repository import Repository
 from fastapi import APIRouter, Depends, HTTPException
-from Services.service import Service
 from Services.serializers import Serializer
-from Services.shoper_client import update_status_order
-import secrets
-import json
+from Api.auth import get_current_active_user
 
-router = APIRouter()
+# NOTE: nothing here calls Shoper. Outbound sync (Services/service.py and
+# Services/shoper_client.py) is left in the repo but no longer exposed as an
+# endpoint - the inbound webhook is the only live Shoper integration for now.
 
-
-@router.post("/shoper/sync", response_model=list[Order])
-def sync_and_return():
-    Service.reception_from_shoper()
-    return Repository.fetch_open_orders()
+# One guard for the whole router: every route below requires a valid token from
+# an approved, active account. Cheaper to read - and impossible to forget on a
+# new endpoint - than repeating Depends() on each function.
+router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
 
 @router.put("/orders/{order_id}/status")
