@@ -1,12 +1,9 @@
 from sqlalchemy import select
-from sqlalchemy.orm import sessionmaker
-from Database.config_db import db
+from Database.config_db import Session
 from models.schemas import User, UserOut
 from models.enums import UserRole
 from Database.db_schemas import UsersTable
 from sqlalchemy.exc import IntegrityError
-
-Session = sessionmaker(bind=db)
 
 
 class UserRepository:

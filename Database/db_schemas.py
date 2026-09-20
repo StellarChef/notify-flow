@@ -4,17 +4,15 @@ from decimal import Decimal
 from sqlalchemy import ForeignKey, func, DateTime
 from sqlalchemy.orm import (
     Mapped,
-    declarative_base,
     mapped_column,
-    sessionmaker,
     relationship,
     DeclarativeBase,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 
-from .config_db import db
-
-Session = sessionmaker(bind=db)
+# No engine and no Session here on purpose: a schema describes tables, it does
+# not need a connection. Keeping them out means this module imports fine without
+# a reachable database - handy for inspecting or generating DDL.
 
 
 class Base(DeclarativeBase):
@@ -55,7 +53,7 @@ class MaterialTable(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
     type: Mapped[str]
-    color: Mapped[float]
+    color: Mapped[str]
     quantity: Mapped[int]
     provider: Mapped[str]
 

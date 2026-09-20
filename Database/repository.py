@@ -1,6 +1,6 @@
 from sqlalchemy import delete, select
-from sqlalchemy.orm import sessionmaker, selectinload
-from Database.config_db import db
+from sqlalchemy.orm import selectinload
+from Database.config_db import Session
 from models.schemas import Order
 from models.enums import CLOSED
 from Database.db_schemas import (
@@ -11,8 +11,6 @@ from Database.db_schemas import (
     Base,
 )
 from sqlalchemy.dialects.postgresql import insert
-
-Session = sessionmaker(bind=db)
 
 CLOSED_STATUSES = [status.value for status in CLOSED]
 

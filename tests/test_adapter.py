@@ -1,6 +1,6 @@
 import json
 
-from adapters import ShoperAdapter
+from Services.adapter import ShoperAdapter
 
 
 def load(path: str) -> dict:
@@ -40,5 +40,5 @@ def show(path: str) -> None:
 
 
 if __name__ == "__main__":
-    show("order_1057.json")   # shipping_id 1 -> PICKUP_POINT
-    show("order_1052.json")   # shipping_id 2 -> HOME_DELIVERY
+    show("order_1057.json")  # shipping_id 1 -> PICKUP_POINT
+    show("order_1052.json")  # shipping_id 2 -> HOME_DELIVERY
