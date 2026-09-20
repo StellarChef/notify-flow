@@ -1,6 +1,21 @@
-# Bezpośrednie zależności projektu (resztę - transitive - pip doinstaluje sam).
+# Direct dependencies only - pip resolves the transitive ones.
+
+# API
 fastapi==0.136.3
 uvicorn==0.48.0
 pydantic==2.13.4
+email-validator==2.3.0      # required by pydantic.EmailStr
+
+# Database
+SQLAlchemy==2.0.51
 psycopg2-binary==2.9.12
+
+# Auth
+argon2-cffi==25.1.0         # password hashing (Argon2id)
+PyJWT==2.13.0               # signing and verifying access tokens
+
+# Shoper integration
+requests==2.34.2
+
+# Configuration
 python-dotenv==1.2.2
