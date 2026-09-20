@@ -19,3 +19,5 @@ config/
 fetch_things.py
 
 endpoints/API.txt
+# runtime logs
+logs/
