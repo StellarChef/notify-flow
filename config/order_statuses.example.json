@@ -1,0 +1,12 @@
+{
+  "1": "COMPLEX",
+  "2": "ACCEPTED",
+  "3": "AWAITING_DELIVERY",
+  "4": "IN_PROGRESS",
+  "5": "AWAITING_PAYMENT",
+  "6": "READY_TO_SHIP",
+  "7": "SHIPPED",
+  "8": "CANCELLED",
+  "9": "REJECTED",
+  "11": "RETURNED"
+}

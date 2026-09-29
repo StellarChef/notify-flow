@@ -1,0 +1,94 @@
+from datetime import datetime
+from decimal import Decimal
+
+from sqlalchemy import ForeignKey, func, DateTime
+from sqlalchemy.orm import (
+    Mapped,
+    mapped_column,
+    relationship,
+    DeclarativeBase,
+)
+from sqlalchemy.dialects.postgresql import JSONB
+
+# No engine and no Session here on purpose: a schema describes tables, it does
+# not need a connection. Keeping them out means this module imports fine without
+# a reachable database - handy for inspecting or generating DDL.
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class CustomerTable(Base):
+    __tablename__ = "customers"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(unique=True)
+    name: Mapped[str]
+    lastname: Mapped[str]
+    email: Mapped[str]
+    phone: Mapped[str]
+
+
+class ProductTable(Base):
+    __tablename__ = "products"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    sku: Mapped[str]
+    quantity: Mapped[int]
+    price: Mapped[Decimal]
+    product_type: Mapped[str] = mapped_column(index=True)
+    attributes: Mapped[dict] = mapped_column(JSONB)
+    # every product line belongs to one order
+    order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"))
+
+
+class DeliveryProviderTable(Base):
+    __tablename__ = "delivery_providers"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    provider: Mapped[str]
+
+
+class MaterialTable(Base):
+    __tablename__ = "materials"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    type: Mapped[str]
+    color: Mapped[str]
+    quantity: Mapped[int]
+    provider: Mapped[str]
+
+
+class OrderTable(Base):
+    __tablename__ = "orders"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    order_id: Mapped[str] = mapped_column(unique=True, index=True)
+    status: Mapped[int] = mapped_column(index=True)
+    fulfillment_path: Mapped[str]
+    ordered_at: Mapped[datetime] = mapped_column(DateTime(True))
+    ship_by: Mapped[datetime] = mapped_column(DateTime(True))
+    delivery_method: Mapped[str]
+    delivery_address: Mapped[str | None]
+    delivery_point: Mapped[str | None]
+    # when the order landed in our DB (set by the database on insert)
+    received_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+    # foreign keys - the actual columns in the table
+    customer_id: Mapped[int] = mapped_column(ForeignKey("customers.id"))
+    delivery_provider_id: Mapped[int] = mapped_column(
+        ForeignKey("delivery_providers.id")
+    )
+
+    # relationships - Python-side navigation, not columns
+    customer: Mapped["CustomerTable"] = relationship()
+    delivery_provider: Mapped["DeliveryProviderTable"] = relationship()
+    products: Mapped[list["ProductTable"]] = relationship(cascade="all, delete-orphan")
+
+
+class UsersTable(Base):
+    __tablename__ = "users"
+    id: Mapped[int] = mapped_column(primary_key=True, unique=True)
+    role: Mapped[str]
+    login: Mapped[str] = mapped_column(unique=True)  # what you sign in with
+    email: Mapped[str] = mapped_column(unique=True)  # contact + future password reset
+    password: Mapped[str]
+    is_active: Mapped[bool]
